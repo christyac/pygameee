@@ -36,7 +36,7 @@ font2=pygame.font.Font(None,16)
 clock=pygame.time.Clock()
 #pygame.key.set_repeat(1,50)
 class GameObject:
-    def __init__(self,image,speed,position):
+    def __init__(self,image,speed,position,paste=True):
         colorkey=image.get_at((0,0))
         self.speed=speed
         self.image=image
@@ -45,16 +45,17 @@ class GameObject:
         self.image.set_colorkey(colorkey,RLEACCEL)
         self.rect=image.get_rect()
         self.rect=self.rect.move(self.x,self.y)
-        screen.blit(background,self.rect,self.rect)
-        screen.blit(self.image,self.rect)
+        if(paste):
+            screen.blit(background,self.rect,self.rect)
+            screen.blit(self.image,self.rect)
         #self.rect=self.rect.move(position)
     def show(self):
         screen.blit(self.image,self.rect)
     def hide(self):
         screen.blit(background,self.rect,self.rect)
 class PlayerObject(GameObject):
-    def __init__(self,image,speed,position,walk_animations):
-        super().__init__(image,speed,position)
+    def __init__(self,image,speed,position,walk_animations,paste=True):
+        super().__init__(image,speed,position,paste)
         self.walk_animations=walk_animations
         self.i=0
         self.temp_image=None
@@ -81,14 +82,15 @@ class PlayerObject(GameObject):
             screen.blit(background,self.rect,self.rect)
             self.rect=self.rect.move((speed,0))
             screen.blit(self.temp_image,self.rect)
-class Enemy(GameObject):
-    def __init__(self,image,speed,position,crouches):
-        super().__init__(image,speed,position)
+class FightMode(GameObject):
+    def __init__(self,image,speed,position,crouches,bullet,paste=True):
+        super().__init__(image,speed,position,paste)
         colorkey=crouches.get_at((0,0))
         crouches.set_colorkey(colorkey,RLEACCEL)
         self.crouches=crouches
         self.stand=image
-    def stand(self):
+        self.hp=100
+    def stands(self):
         self.image=self.crouches
         super().hide()
         self.image=self.stand
@@ -98,6 +100,8 @@ class Enemy(GameObject):
         super().hide()
         self.image=self.crouches
         super().show()
+    def shoot(self):
+        pass
         #self.image=stand
   #  def hide(self):
  #   def show(self):
@@ -212,20 +216,19 @@ round1=False
 run=True
 crouches=pygame.image.load(location+"crouch-4.png").convert()
 standing=pygame.image.load(location+"stand2.png").convert()
+bullet1=pygame.image.load(location+"bullet1.png").convert()
 #Enemy
 enemies1=pygame.image.load(location+"enemy6.png").convert()
 enemies1_crouch=pygame.image.load(location+"enemy_crouch2.png").convert()
 #empty_list=[]
-player_crouch=GameObject(crouches,0,(50,260))
-stand=GameObject(standing,0,(50,260))
+player_fight=FightMode(standing,0,(50,260),crouches,bullet1,paste=False)
 #Enemy
-enemy1=Enemy(enemies1,0,(520,240),enemies1_crouch)
+enemy1=FightMode(enemies1,0,(520,240),enemies1_crouch,bullet1,paste=False)
 
 #enemy1=GameObject(enemies1,0,(520,240))
 #enemy1_crouch=GameObject(enemies1_crouch,0,(500,240))
 
 #crouch.hide()
-enemy1.hide()
 #enemy1_crouch.show()
 enemy1.crouch()
 pygame.display.update()
@@ -248,24 +251,20 @@ while(run):
     #p1.show()
     pygame.display.update()
     clock.tick(27)
-player_crouch.show()
+player_fight.crouch()
 p2.x=50
-p1.health=100
-enemy_health=100
 while(round1):
     for event in pygame.event.get():
         if event.type is QUIT:
             pygame.quit()
     keys=pygame.key.get_pressed()
     if(keys[K_UP]):
-        player_crouch.hide()
-        stand.show()
+        player_fight.stands()
         #enemy1_crouch.hide()
         #enemy1.show()
-        enemy1.stand()
+        enemy1.stands()
     else:
-        stand.hide()
-        player_crouch.show()
+        player_fight.crouch()
         #enemy1.hide()
         #enemy1_crouch.show()
         enemy1.crouch()

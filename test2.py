@@ -1,4 +1,3 @@
-#Hello my name is barry allen and i am the fatseest man alive
 import pygame
 from pygame.locals import *
 pygame.init()

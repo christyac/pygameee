@@ -83,13 +83,23 @@ class PlayerObject(GameObject):
             self.rect=self.rect.move((speed,0))
             screen.blit(self.temp_image,self.rect)
 class FightMode(GameObject):
-    def __init__(self,image,speed,position,crouches,bullet,paste=True):
+    def __init__(self,image,speed,position,crouches,bullet,paste=True,direction=1):
         super().__init__(image,speed,position,paste)
         colorkey=crouches.get_at((0,0))
         crouches.set_colorkey(colorkey,RLEACCEL)
         self.crouches=crouches
         self.stand=image
         self.hp=100
+        self.bullet=bullet
+        colorkey2=self.bullet.get_at((0,0))
+        self.position=position
+        self.bullet.set_colorkey(colorkey2,RLEACCEL)
+        self.bullet_x=position[0]+90
+        self.bullet_y=position[1]+20
+        self.bullet_rect=self.bullet.get_rect()
+        self.bullet_rect=self.bullet_rect.move(self.bullet_x,self.bullet_y)
+        self.bullet_speed=5
+        self.bullet_direction=1
     def stands(self):
         self.image=self.crouches
         super().hide()
@@ -101,8 +111,25 @@ class FightMode(GameObject):
         self.image=self.crouches
         super().show()
     def shoot(self):
-        pass
-        #self.image=stand
+        #temp=self.image
+        #self.image=self.bullet   
+        if(self.bullet_x>=620):
+            screen.blit(background,self.bullet_rect,self.bullet_rect)
+            print("if 2:",self.bullet_x)
+            self.bullet_x=self.position[0]+90
+            self.bullet_y=self.position[1]+20
+            self.bullet_rect=self.bullet.get_rect()
+            self.bullet_rect=self.bullet_rect.move(self.bullet_x,self.bullet_y)
+        if(self.bullet_x<620):#saved
+            screen.blit(background,self.bullet_rect,self.bullet_rect)
+            #pygame.display.update()
+            self.bullet_x=self.bullet_x+40
+            print("if 1:",self.bullet_x)
+            self.bullet_rect=self.bullet_rect.move(40,0)
+            screen.blit(self.bullet,self.bullet_rect)
+            #self.image=stand
+    def bullet_show(self):
+        screen.blit(self.bullet,self.bullet_rect)
   #  def hide(self):
  #   def show(self):
 
@@ -260,6 +287,10 @@ while(round1):
     keys=pygame.key.get_pressed()
     if(keys[K_UP]):
         player_fight.stands()
+        if(keys[K_SPACE]):
+            player_fight.shoot()
+            player_fight.bullet_show()
+            #pygame.time.delay(5000)
         #enemy1_crouch.hide()
         #enemy1.show()
         enemy1.stands()

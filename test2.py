@@ -120,7 +120,7 @@ class FightMode(GameObject):
             self.bullet_y=self.position[1]+20
             self.bullet_rect=self.bullet.get_rect()
             self.bullet_rect=self.bullet_rect.move(self.bullet_x,self.bullet_y)
-            return false
+            return False
         if(self.bullet_x<620):#saved
             screen.blit(background,self.bullet_rect,self.bullet_rect)
             #pygame.display.update()
@@ -129,7 +129,7 @@ class FightMode(GameObject):
             self.bullet_rect=self.bullet_rect.move(40,0)
             screen.blit(self.bullet,self.bullet_rect)
             #self.image=stand
-        return true
+        return True
     def bullet_show(self):
         screen.blit(self.bullet,self.bullet_rect)
   #  def hide(self):
@@ -282,7 +282,7 @@ while(run):
     clock.tick(27)
 player_fight.crouch()
 p2.x=50
-shooting=false
+shooting=False
 while(round1):
     for event in pygame.event.get():
         if event.type is QUIT:
@@ -290,9 +290,15 @@ while(round1):
     keys=pygame.key.get_pressed()
     if(keys[K_UP]):
         player_fight.stands()
-        if(keys[K_SPACE] and not shooting):
-            shooting=player_fight.shoot()
-            player_fight.bullet_show()
+        if(keys[K_SPACE] or shooting==True):
+            if(shooting==False):
+                shooting=True
+            else:
+                shooting=player_fight.shoot()
+                player_fight.bullet_show()
+  #      if(keys[K_SPACE]) and not shooting):
+  #          shooting=player_fight.shoot()
+  #          player_fight.bullet_show()
             #pygame.time.delay(5000)
         #enemy1_crouch.hide()
         #enemy1.show()

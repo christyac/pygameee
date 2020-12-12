@@ -1,4 +1,4 @@
-import pygame#check check
+import pygame
 from pygame.locals import *
 pygame.init()
 screen=pygame.display.set_mode((640,480))
@@ -53,6 +53,14 @@ class GameObject:
         screen.blit(self.image,self.rect)
     def hide(self):
         screen.blit(background,self.rect,self.rect)
+    def move(self,speed=0,direction=1):
+        if(speed==0):
+            speed=self.speed
+        self.x=self.x+speed
+        screen.blit(background,self.rect,self.rect)
+        self.rect=self.rect.move((speed,0))
+        screen.blit(self.image,self.rect)
+
 class PlayerObject(GameObject):
     def __init__(self,image,speed,position,walk_animations,paste=True):
         super().__init__(image,speed,position,paste)
@@ -61,9 +69,10 @@ class PlayerObject(GameObject):
         self.temp_image=None
         for j in range(len(self.walk_animations)):
             colorkey=self.walk_animations[j].get_at((0,0))
-            self.walk_animations[j].set_colorkey(colorkey,RLEACCEL)
-        #print(self.i)        
-    def move(self,speed=5,direction=1):
+            self.walk_animations[j].set_colorkey(colorkey,RLEACCEL)        
+    def move(self,speed=0,direction=1):
+        if(speed==0):
+            speed=self.speed
         direction_factor=0
         if(direction==-1):
                 speed=speed*direction
@@ -90,16 +99,9 @@ class FightMode(GameObject):
         self.crouches=crouches
         self.stand=image
         self.hp=100
-        self.bullet=bullet
-        colorkey2=self.bullet.get_at((0,0))
         self.position=position
-        self.bullet.set_colorkey(colorkey2,RLEACCEL)
-        self.bullet_x=position[0]+90
-        self.bullet_y=position[1]+20
-        self.bullet_rect=self.bullet.get_rect()
-        self.bullet_rect=self.bullet_rect.move(self.bullet_x,self.bullet_y)
-        self.bullet_speed=5
-        self.bullet_direction=1
+        self.bullet_image=bullet
+        self.bullet=GameObject(bullet,65,(position[0]+90,position[1]+14),paste=False)
     def stands(self):
         self.image=self.crouches
         super().hide()
@@ -111,34 +113,21 @@ class FightMode(GameObject):
         self.image=self.crouches
         super().show()
     def shoot(self):
-        #temp=self.image
-        #self.image=self.bullet   
-        if(self.bullet_x>=620):
-            screen.blit(background,self.bullet_rect,self.bullet_rect)
-            print("if 2:",self.bullet_x)
-            self.bullet_x=self.position[0]+90
-            self.bullet_y=self.position[1]+20
-            self.bullet_rect=self.bullet.get_rect()
-            self.bullet_rect=self.bullet_rect.move(self.bullet_x,self.bullet_y)
+        if(self.bullet.x==self.position[0]+90):
+            self.bullet.show()
+            self.bullet.x=self.bullet.x+1
+            return True
+        elif(self.bullet.x<=620):
+            self.bullet.move()
+            return True
+        else:
+            self.bullet=GameObject(self.bullet_image,65,(self.position[0]+90,self.position[1]+14),paste=False)
             return False
-        if(self.bullet_x<620):#saved
-            screen.blit(background,self.bullet_rect,self.bullet_rect)
-            #pygame.display.update()
-            self.bullet_x=self.bullet_x+40
-            print("if 1:",self.bullet_x)
-            self.bullet_rect=self.bullet_rect.move(40,0)
-            screen.blit(self.bullet,self.bullet_rect)
-            #self.image=stand
-        return True
-    def bullet_show(self):
-        screen.blit(self.bullet,self.bullet_rect)
-  #  def hide(self):
- #   def show(self):
 
 #Level 1
 screen.blit(background,(0,0))
 arrow=pygame.image.load(location+"orange_green_arrow.png").convert()
-npc=pygame.image.load(location+"man.png").convert()
+npc=pygame.image.load(location+"man2222.png").convert()
 text=font1.render("Use arrow keys to move",False,(255,255,0))
 text21=font2.render("There is a lot of crowd up ahead.",False,(255,0,0))
 text22=font2.render("Wonder what happened",False,(255,0,0))
@@ -173,6 +162,9 @@ while(run):
         text31.show()
         text32.show()
         talked=1
+        p1.hide()
+        p1.show()
+        npc1.show()
         pygame.display.update()
         pygame.time.wait(2000)
         text31.hide()
@@ -201,8 +193,8 @@ light_on=pygame.image.load(location+"light_on.png").convert()
 light_off=pygame.image.load(location+"light_off.png").convert()
 p1=PlayerObject(player,5,(0,290),walk)
 lamp_on=GameObject(light_on,0,(516,218))
-lamp_off=GameObject(light_off,0,((516,218)))
 screen.blit(background,(0,0))
+lamp_off=GameObject(light_off,0,((516,218)))
 lamp_is_on=True
 pressed=False
 run=True
@@ -250,18 +242,15 @@ bullet1=pygame.image.load(location+"bullet1.png").convert()
 enemies1=pygame.image.load(location+"enemy6.png").convert()
 enemies1_crouch=pygame.image.load(location+"enemy_crouch2.png").convert()
 #empty_list=[]
+# bullet1=GameObject(bullets,0,(0,0))
 player_fight=FightMode(standing,0,(50,260),crouches,bullet1,paste=False)
 #Enemy
 enemy1=FightMode(enemies1,0,(520,240),enemies1_crouch,bullet1,paste=False)
+player_hp=pygame.image.load(location+"hp_100.png").convert()
+player1_hp=GameObject(player_hp,0,(5,10))
 
-#enemy1=GameObject(enemies1,0,(520,240))
-#enemy1_crouch=GameObject(enemies1_crouch,0,(500,240))
-
-#crouch.hide()
-#enemy1_crouch.show()
 enemy1.crouch()
 pygame.display.update()
-#clock1=pygame.time.Clock()
 while(run):
     for event in pygame.event.get():
         if event.type is QUIT:
@@ -283,32 +272,33 @@ while(run):
 player_fight.crouch()
 p2.x=50
 shooting=False
+shoot_time=0
+enemy_timer=0
 while(round1):
     for event in pygame.event.get():
         if event.type is QUIT:
             pygame.quit()
     keys=pygame.key.get_pressed()
-    if(keys[K_UP]):
-        player_fight.stands()
-        if(keys[K_SPACE] or shooting==True):
-            if(shooting==False):
-                shooting=True
-            else:
-                shooting=player_fight.shoot()
-                player_fight.bullet_show()
-  #      if(keys[K_SPACE]) and not shooting):
-  #          shooting=player_fight.shoot()
-  #          player_fight.bullet_show()
-            #pygame.time.delay(5000)
-        #enemy1_crouch.hide()
-        #enemy1.show()
+    enemy_timer=enemy_timer+1
+    if(enemy_timer<27):
         enemy1.stands()
     else:
-        player_fight.crouch()
-        #enemy1.hide()
-        #enemy1_crouch.show()
         enemy1.crouch()
-        #clock.tick(27)
+    if(enemy_timer==98):
+        enemy_timer=0
+    if(keys[K_UP]):
+        player_fight.stands()
+        if(keys[K_SPACE] and shooting==False):
+            shooting=True
+    else:
+        player_fight.crouch()
+    if(shooting==True):
+        shoot_time=shoot_time+1
+        shooting=player_fight.shoot()
+        #player_fight.bullet.show()
+    if(shoot_time==96):
+        shoot_time=0
+        shooting=False        
     pygame.display.update()
     clock.tick(27)
 
